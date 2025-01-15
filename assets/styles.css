@@ -1,14 +1,50 @@
 /* css styles */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 :root {
-    --primary-color: #FFC300;
-    --secondary-color: #2ecc71;
+    --primary-color: #4ECDC4;
+    --secondary-color: #F78142;
     --font-size-large: 24px;
     --padding: 16px;
+    --bs-body-font-family: "Montserrat", serif;
+}
+
+.container {
+    max-width: none;
+}
+
+.table {
+    width: 90%;
+    table-layout: auto;
+    box-sizing: border-box;
 }
 
 .navbar {
     background-color: var(--primary-color) !important;
     width: 100%;
+    color: white;
+}
+
+.navbar>.container {
+    display: block;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.nav-item, .navbar-brand {
+    padding-left: 20px;
+}
+
+.page-content {
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.page-content .row {
+    padding-bottom: 20px !important;
 }
 
 .flash_card {
@@ -26,7 +62,7 @@
     text-align: center; /* Center all text */
 }
 
-.card-title {
+.card-header {
     font-size: 18px;
     font-weight: bold;
     width: 100%;

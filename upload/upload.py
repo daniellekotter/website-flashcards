@@ -1,58 +1,145 @@
-from dash import html, dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import pandas as pd
 import base64
 import io
+import dash_bootstrap_components as dbc
+import dash
+from dash import dcc, html
 
 
-upload_page = html.Div([
-    dcc.Upload(
-        id='upload-data',
-        children=html.Button('Upload Study Data'),
-        multiple=False
-    ),
-    html.Div(id='output-data-upload'),
-    html.Div(id='table-container')  # This will display the table
-])
+upload_form = dbc.Card(
+    [
+        dbc.CardHeader("Upload Study Content"),
+        dbc.CardBody(
+            dbc.Form([
+                dbc.Row([
+                    dbc.Label("Choose an Excel File:"),
+                    dcc.Upload(
+                        id="upload-data",
+                        children=html.Button("Upload File", className="btn btn-danger"),
+                        multiple=False
+                    ),
+                ]),
+                dbc.Row([
+                    dbc.Label("Select study manner:"),
+                    dbc.RadioItems(
+                        id='study-order-dropdown',
+                        options=[
+                            {'label': 'Random', 'value': 'random'},
+                            {'label': 'In Order', 'value': 'in_order'}
+                        ],
+                        value='random',
+                        className="mb-3"
+                    ),
+                ]),
+                html.Div(
+                    dbc.Button("Submit", id="submit-button", color="danger", disabled=True),
+                    className="d-grid gap-2 col-6 mx-auto",
+                ),
+            ]),
+        ),
+    ],
+)
 
-# Function to parse the uploaded Excel file
-def parse_contents(contents):
-    # Decode the base64 contents
-    content_type, content_string = contents.split(',')
+upload_content = dbc.Card(
+    [
+        dbc.CardHeader("Study Content"),
+        dbc.CardBody(children=[
+            html.Div(id='output-file-info'),
+            html.Div(id='table-container', className="mt-3"),
+            dcc.Store(id='form-submitted', data=False),  # Store to track form submission status,
+            dbc.Button("Start Studying", id="start-button", color="danger", disabled=True)
+        ])
+    ]
+)
 
-    decoded = base64.b64decode(content_string)
-    try:
-        # Read the file into a pandas dataframe
-        df = pd.read_excel(io.BytesIO(decoded), engine='openpyxl')
-        return df
-    except Exception as e:
-        print(f"Error reading Excel file: {e}")
-        return None
 
-# Callback to handle the file upload and display the contents
-def register_callbacks(app=None):
+layout = dbc.Container(
+    children=[
+        dbc.Row([
+            dbc.Col(upload_form,
+                    width=3),
+            dbc.Col(upload_content,
+                    width=8)
+        ])
+    ]
+)
+
+def register_callbacks(app):
     @app.callback(
-        [Output('output-data-upload', 'children'),
-        Output('table-container', 'children')],
-        [Input('upload-data', 'contents')]
+        [
+            Output('output-file-info', 'children'),  # Feedback for file upload
+            Output('table-container', 'children'),  # Display table with file content
+            Output('upload-data', 'disabled'),      # Disable upload after submission
+            Output('submit-button', 'disabled'),    # Disable submit button after processing
+            Output('start-button', 'disabled'),     # Enable start button after submission
+            Output('form-submitted', 'data'),       # Track if form is submitted
+        ],
+        [
+            Input('submit-button', 'n_clicks'),      # Trigger when submit button is clicked
+        ],
+        [
+            State('study-order-dropdown', 'value'),  # Study order (random/in order)
+            State('form-submitted', 'data'),         # Form submission status
+            State('upload-data', 'contents'),        # Uploaded file contents
+            State('upload-data', 'filename'),        # Uploaded file name
+        ]
     )
-    def update_output(contents):
-        if contents is None:
-            return "Upload an Excel file to get started.", None
+    def update_table(n_clicks_submit, study_order, form_submitted, file_contents=None, filename=None):
+        # If no file is uploaded, return a message
+        if file_contents is None:
+            return "Please upload an Excel file.", None, False, False, True, False
 
-        # Parse the uploaded Excel file
-        df = parse_contents(contents)
-        
-        if df is not None:
-            # Display a success message
-            output = f"File successfully uploaded! It contains {len(df)} questions and answers."
-            
-            # Display the first few rows of the dataframe as a table
-            return output, html.Table(
-                # Header
-                [html.Tr([html.Th(col) for col in df.columns])] +
-                # Rows
-                [html.Tr([html.Td(df.iloc[i][col]) for col in df.columns]) for i in range(min(10, len(df)))]
+        # If form is already submitted or submit button not clicked, do nothing
+        if n_clicks_submit is None or form_submitted:
+            return "", None, False, False, True, form_submitted
+
+        try:
+            # Decode and load the Excel file into a DataFrame
+            content_type, content_string = file_contents.split(',')
+            decoded = base64.b64decode(content_string)
+            df = pd.read_excel(io.BytesIO(decoded))
+
+            # Shuffle rows if 'random' is selected
+            if study_order == 'random':
+                df = df.sample(frac=1).reset_index(drop=True)
+
+            # Generate table header and body
+            table_header = html.Thead(html.Tr([html.Th(col) for col in df.columns]))
+            table_body = html.Tbody([
+                html.Tr([html.Td(df.iloc[i, col]) for col in range(len(df.columns))])
+                for i in range(len(df))
+            ])
+            table = dbc.Table(
+                [table_header, table_body],
+                bordered=True,
+                hover=True,
+                responsive=True,
+                striped=True,
             )
-        else:
-            return "Error in file processing.", None
+
+            # Return feedback, display table, disable upload and submit, and enable start button
+            return (
+                f"File '{filename}' uploaded and processed successfully.",
+                table,
+                True,  # Disable upload
+                False,  # Disable submit
+                False, # Disable start
+                True   # Form is submitted
+            )
+
+        except Exception as e:
+            # Handle file processing errors
+            return f"Error processing file: {str(e)}", None, False, False, True, form_submitted
+
+    @app.callback(
+        Output('url', 'pathname'),  # Redirect to the study page
+        Input('start-button', 'n_clicks'),   # Triggered when start button is clicked
+        State('form-submitted', 'data'),     # Ensure the form was submitted
+    )
+    def navigate_to_study(n_clicks_start, form_submitted):
+        if n_clicks_start is None or not form_submitted:
+            return dash.no_update
+
+        # Display study page with uploaded content
+        return '/study'
