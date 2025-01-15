@@ -1,0 +1,47 @@
+/* css styles */
+:root {
+    --primary-color: #FFC300;
+    --secondary-color: #2ecc71;
+    --font-size-large: 24px;
+    --padding: 16px;
+}
+
+.navbar {
+    background-color: var(--primary-color) !important;
+    width: 100%;
+}
+
+.flash_card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Ensure text is centered */
+    height: 100%; /* Adjust based on your layout */
+}
+
+.card-title,
+.card-subtitle,
+.card-text {
+    text-align: center; /* Center all text */
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+    width: 100%;
+}
+
+.card-subtitle {
+    font-size: 14px;
+    margin: 30px;
+}
+
+.card-text {
+    margin: 30px;
+}
+
+.flash_card .btn-group {
+    display: flex;
+    justify-content: center; /* Center button group */
+}

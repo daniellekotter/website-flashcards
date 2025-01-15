@@ -1,0 +1,12 @@
+{
+  "hash": "7492dfa1bc2930038d94507d17e63f38",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: \"Upload File\"\nengine: shiny\n---\n\n::: {#0b41c08f .cell execution_count=1}\n``` {.python .cell-code}\nfrom shiny import App, ui, reactive, render\nimport pandas as pd\n\n# Define the app UI\napp_ui = ui.page_fluid(\n    ui.panel_title(\"Upload an Excel File\"),\n    ui.input_file(\"file\", \"Choose an Excel file\", accept=[\".xlsx\", \".xls\"]),\n    ui.output_table(\"table\")\n)\n\n# Define the app server logic\ndef server(input, output, session):\n    # Store the uploaded dataframe reactively\n    @reactive.Calc\n    def dataframe():\n        file_info = input.file()\n        if not file_info:\n            return None\n        # Read the Excel file into a pandas DataFrame\n        return pd.read_excel(file_info[0][\"datapath\"])\n    \n    # Render the dataframe as a table\n    @output\n    @render.table\n    def table():\n        df = dataframe()\n        if df is None:\n            return \"Please upload an Excel file to see the data.\"\n        return df\n\n# Create the Shiny app\napp = App(app_ui, server)\n```\n:::\n\n\n",
+    "supporting": [
+      "index_files/figure-html"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}
