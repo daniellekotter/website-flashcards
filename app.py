@@ -8,7 +8,7 @@ external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(
     external_stylesheets=external_stylesheets,
     suppress_callback_exceptions=True,
-    use_pages=True
+    use_pages=True,
 )
 
 app.title = "Flashcard Study"
