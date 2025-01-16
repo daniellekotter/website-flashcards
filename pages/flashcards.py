@@ -1,7 +1,16 @@
 import dash
-from dash import Input, Output, State, html
+from dash import dcc, html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 import pandas as pd
+
+
+dash.register_page(
+    __name__,
+    path='/study',
+    title='Study',
+    name='Study',
+    order=2
+)
 
 
 # Load the flashcards from an Excel file
@@ -72,42 +81,41 @@ def get_random_card(df):
 current_card = {"question": None, "answer": None, "revealed": False}
 
 # Callback for updating the question
-def register_callbacks(app=None):
-    @app.callback(
-        [
-            Output("question-div", "children"),
-            Output("answer-div", "children"),
-            Output("progress-bar", "label"),
-            Output("progress-bar", "value")
-        ],[
-            Input("correct-question-btn", "n_clicks"),
-            Input("show-answer-btn", "n_clicks")
-        ],[
-            State("answer-div", "children"),
-            State("progress-bar", "value")
-        ]
-    )
-    def update_flashcard(next_clicks, show_clicks, answer_div, progress):
-        ctx = dash.callback_context
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        progress = round((next_clicks / len(df)) * 100)
+@callback(
+    [
+        Output("question-div", "children"),
+        Output("answer-div", "children"),
+        Output("progress-bar", "label"),
+        Output("progress-bar", "value")
+    ],[
+        Input("correct-question-btn", "n_clicks"),
+        Input("show-answer-btn", "n_clicks")
+    ],[
+        State("answer-div", "children"),
+        State("progress-bar", "value")
+    ]
+)
+def update_flashcard(next_clicks, show_clicks, answer_div, progress):
+    ctx = dash.callback_context
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    progress = round((next_clicks / len(df)) * 100)
 
-        if button_id == "correct-question-btn":
-            # Fetch a new card
-            question, answer = get_random_card(update_df)
-            # If the result is None, this means that all the answers have been asked
-            if not question:
-                return "Congrats", "You have made it to the end!", f"100%", 100
+    if button_id == "correct-question-btn":
+        # Fetch a new card
+        question, answer = get_random_card(update_df)
+        # If the result is None, this means that all the answers have been asked
+        if not question:
+            return "Congrats", "You have made it to the end!", f"100%", 100
 
-            current_card["question"] = question
-            current_card["answer"] = answer
-            current_card["revealed"] = False
-            return question, "",  f"{progress}%", progress
+        current_card["question"] = question
+        current_card["answer"] = answer
+        current_card["revealed"] = False
+        return question, "",  f"{progress}%", progress
 
-        elif button_id == "show-answer-btn":
-            if not current_card["revealed"]:
-                current_card["revealed"] = True
-                return current_card["question"], current_card["answer"], f"{progress} %", progress
+    elif button_id == "show-answer-btn":
+        if not current_card["revealed"]:
+            current_card["revealed"] = True
+            return current_card["question"], current_card["answer"], f"{progress} %", progress
 
-        # Default return values
-        return "Press Next to start!", "", "0%", 0
+    # Default return values
+    return "Press Next to start!", "", "0%", 0
