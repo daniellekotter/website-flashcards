@@ -1,6 +1,7 @@
 import dash
-from dash import html, Input, Output, State, callback
+from dash import html, dcc, Input, Output, State, callback
 import dash_bootstrap_components as dbc
+from io import StringIO
 import pandas as pd
 
 
@@ -13,6 +14,7 @@ dash.register_page(
 )
 
 
+# Flashcard Layout
 flash_card = dbc.Card(
     children=[
         dbc.CardHeader(
@@ -60,65 +62,129 @@ layout = dbc.Container(children=[
         dbc.Progress(id="progress-bar", striped=True, animated=True, className="mb-3"),
         dbc.Col(flash_card, width={"size": 4, "offset": 4}),
     ]),
+    dcc.Store(id='uploaded-data', storage_type='session'),
+    dcc.Store(id='current-questions', storage_type='session'),
+    dcc.Store(id='correct-answers', storage_type='session', data=[]),
 ])
 
 
-# Helper to get a random question
-def get_random_card(df):
-    if df.empty:
-        return "No study content yet", "Please upload the content you want to study."  # Return None when the DataFrame is empty
+@callback(
+    Output('current-questions', 'data', allow_duplicate=True),
+    Input('url', 'pathname'),  # Triggers when navigating to /study
+    State('uploaded-data', 'data'),
+    prevent_initial_call='initial_duplicate'
+)
+def initialize_questions(pathname, uploaded_data):
+    if pathname == '/study' and uploaded_data:
+        df = pd.read_json(StringIO(uploaded_data), orient='split')
+        questions = df.to_dict('records')
+        return questions
+    return []
 
-    card = df.sample(n=1).iloc[0]
-    df.drop(card.name, inplace=True)  # Remove the selected card from the DataFrame
-    return card["Question"], card["Answer"]
 
-# Store state of the current flashcard
-current_card = {"question": None, "answer": None, "revealed": False}
-
-
-# Callback for updating the question
+# Display Flashcard and Handle Logic
 @callback(
     [
         Output("question-div", "children"),
         Output("answer-div", "children"),
         Output("progress-bar", "label"),
-        Output("progress-bar", "value")
-    ],[
-        Input("correct-question-btn", "n_clicks"),
+        Output("progress-bar", "value"),
+        Output('current-questions', 'data'),
+        Output('correct-answers', 'data')
+    ],
+    [
+        Input('url', 'pathname'),  # Triggers when navigating to /study
         Input("show-answer-btn", "n_clicks"),
-        Input('uploaded-data', 'data')  # Access stored data
-    ],[
-        State("answer-div", "children"),
-        State("progress-bar", "value")
+        Input("correct-question-btn", "n_clicks"),
+        Input("incorrect-question-btn", "n_clicks")
+    ],
+    [
+        State("current-questions", "data"),
+        State("correct-answers", "data"),
+        State("answer-div", "children")
     ]
 )
-def update_flashcard(next_clicks, show_clicks, uploaded_data, answer_div, progress):
-    if uploaded_data is None:
-        return html.P("No data uploaded yet.")
-
-    # Convert the JSON back to a DataFrame
-    df = pd.read_json(uploaded_data, orient='split')
-
+def update_flashcard(pathname, show_clicks, correct_clicks, incorrect_clicks, questions, correct_answers, answer_div):
+    if not questions:
+        return "No Questions", "Please upload the content you want to study.", "0%", 0, [], []
+    
     ctx = dash.callback_context
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    progress = round((next_clicks / len(df)) * 100)
+    print("button pressed" + button_id)
+    # Get the first question
+    current_question = questions[0]
 
-    if button_id == "correct-question-btn":
-        # Fetch a new card
-        question, answer = get_random_card(df)
-        # If the result is None, this means that all the answers have been asked
-        if not question:
-            return "Congrats", "You have made it to the end!", f"100%", 100
+    if button_id == "show-answer-btn":
+        # Show the answer
+        return (
+            current_question["Question"],
+            current_question["Answer"],
+            get_progress_label(correct_answers, questions),
+            get_progress_value(correct_answers, questions),
+            questions,
+            correct_answers
+        )
 
-        current_card["question"] = question
-        current_card["answer"] = answer
-        current_card["revealed"] = False
-        return question, "",  f"{progress}%", progress
+    elif button_id == "correct-question-btn":
+        # Move question to correct answers and go to next question
+        correct_answers.append(current_question)
+        questions.pop(0)
 
-    elif button_id == "show-answer-btn":
-        if not current_card["revealed"]:
-            current_card["revealed"] = True
-            return current_card["question"], current_card["answer"], f"{progress} %", progress
+        # If all questions are done, show completion message
+        if not questions:
+            return (
+                "Congrats!",
+                f"You've answered all questions! Correct: {len(correct_answers)} / {len(correct_answers)}",
+                "100%",
+                100,
+                questions,
+                correct_answers
+            )
 
-    # Default return values
-    return "Press Next to start!", "", "0%", 0
+        # Move to the next question
+        next_question = questions[0]
+        return (
+            next_question["Question"],
+            "",
+            get_progress_label(correct_answers, questions),
+            get_progress_value(correct_answers, questions),
+            questions,
+            correct_answers
+        )
+
+    elif button_id == "incorrect-question-btn":
+        # Keep the question in the list and go to the next
+        questions.append(questions.pop(0))
+        
+        # Move to the next question
+        next_question = questions[0]
+        return (
+            next_question["Question"],
+            "",
+            get_progress_label(correct_answers, questions),
+            get_progress_value(correct_answers, questions),
+            questions,
+            correct_answers
+        )
+
+    # Default display
+    return (
+        current_question["Question"],
+        "",
+        get_progress_label(correct_answers, questions),
+        get_progress_value(correct_answers, questions),
+        questions,
+        correct_answers
+    )
+
+
+# Progress Helper Functions
+def get_progress_label(correct_answers, questions):
+    total = len(correct_answers) + len(questions)
+    correct = len(correct_answers)
+    return f"{correct} / {total} Correct"
+
+def get_progress_value(correct_answers, questions):
+    total = len(correct_answers) + len(questions)
+    correct = len(correct_answers)
+    return (correct / total) * 100 if total > 0 else 0
