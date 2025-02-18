@@ -60,6 +60,7 @@ upload_content = dbc.Card(
             html.Div(id='output-file-info'),
             html.Div(id='table-container', className="mt-3"),
             dcc.Store(id='form-submitted', data=False),  # Store to track form submission status
+            dcc.Store(id='uploaded-data', storage_type='session'),  # Store uploaded data in session storage
             dbc.Button("Start Studying", id="start-button", href="/study", color="danger", disabled=True)
         ])
     ]
@@ -85,6 +86,7 @@ layout = dbc.Container(
         Output('reset-button', 'disabled'),     # Enable reset button
         Output('start-button', 'disabled'),     # Enable start button after submission
         Output('form-submitted', 'data'),       # Track if form is submitted
+        Output('uploaded-data', 'data'),        # Store the processed data
     ],
     [
         Input('submit-button', 'n_clicks'),
@@ -100,7 +102,7 @@ layout = dbc.Container(
 def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted,
                  file_contents=None, filename=None):
 
-    start_outcome = "Please upload an Excel file.", None, False, False, True, True, False
+    start_outcome = "Please upload an Excel file.", None, False, False, True, True, False, None
     if file_contents is None:
         return start_outcome
 
@@ -132,6 +134,9 @@ def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted,
             striped=True,
         )
 
+        # Store the DataFrame as JSON in dcc.Store
+        data_json = df.to_json(date_format='iso', orient='split')
+
         return (
             f"File '{filename}' uploaded and processed successfully.",
             table,
@@ -139,7 +144,8 @@ def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted,
             True,  # Disable submit
             False, # Enable reset button
             False, # Enable start button
-            True   # Form is submitted
+            True,   # Form is submitted
+            data_json  # Storing the JSON serialized DataFrame
         )
 
     except Exception as e:
@@ -150,5 +156,6 @@ def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted,
             False, # Keep enabling submitting
             True,  # Keep enabled reset button
             True,  # Keep enabled start button
-            True   # Form is submitted
+            True,   # Form is submitted
+            None
         )

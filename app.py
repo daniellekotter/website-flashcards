@@ -10,7 +10,6 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     use_pages=True,
 )
-
 app.title = "Flashcard Study"
 
 
@@ -23,6 +22,7 @@ nav_drop = [
     for page in dash.page_registry.values()
     if page["module"] != "pages.not_found_404" and page["name"] != "Home"
 ]
+
 
 navbar_item = dbc.Navbar(
     children=[
@@ -48,6 +48,7 @@ navbar_item = dbc.Navbar(
     class_name="navbar",
     dark=True
 )
+
 
 # Initialize layout of the app
 app.layout = html.Div(children=[

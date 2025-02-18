@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html, Input, Output, State, callback
+from dash import html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 import pandas as pd
 
@@ -12,11 +12,6 @@ dash.register_page(
     order=2
 )
 
-
-# Load the flashcards from an Excel file
-file_path = "data/flashcards.xlsx"  # Replace with your Excel file path
-df = pd.read_excel(file_path)
-update_df = df.copy()
 
 flash_card = dbc.Card(
     children=[
@@ -80,6 +75,7 @@ def get_random_card(df):
 # Store state of the current flashcard
 current_card = {"question": None, "answer": None, "revealed": False}
 
+
 # Callback for updating the question
 @callback(
     [
@@ -89,20 +85,27 @@ current_card = {"question": None, "answer": None, "revealed": False}
         Output("progress-bar", "value")
     ],[
         Input("correct-question-btn", "n_clicks"),
-        Input("show-answer-btn", "n_clicks")
+        Input("show-answer-btn", "n_clicks"),
+        Input('uploaded-data', 'data')  # Access stored data
     ],[
         State("answer-div", "children"),
         State("progress-bar", "value")
     ]
 )
-def update_flashcard(next_clicks, show_clicks, answer_div, progress):
+def update_flashcard(next_clicks, show_clicks, uploaded_data, answer_div, progress):
+    if uploaded_data is None:
+        return html.P("No data uploaded yet.")
+
+    # Convert the JSON back to a DataFrame
+    df = pd.read_json(uploaded_data, orient='split')
+
     ctx = dash.callback_context
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
     progress = round((next_clicks / len(df)) * 100)
 
     if button_id == "correct-question-btn":
         # Fetch a new card
-        question, answer = get_random_card(update_df)
+        question, answer = get_random_card(df)
         # If the result is None, this means that all the answers have been asked
         if not question:
             return "Congrats", "You have made it to the end!", f"100%", 100
