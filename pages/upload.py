@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 import dash
 from dash import dcc, html, Input, Output, State, callback
 
+
 dash.register_page(
     __name__,
     path='/upload',
@@ -12,6 +13,7 @@ dash.register_page(
     name='Upload',
     order=1
 )
+
 
 upload_form = dbc.Card(
     [
@@ -50,6 +52,7 @@ upload_form = dbc.Card(
     ],
 )
 
+
 upload_content = dbc.Card(
     [
         dbc.CardHeader("Study Content"),
@@ -62,6 +65,7 @@ upload_content = dbc.Card(
     ]
 )
 
+
 layout = dbc.Container(
     children=[
         dbc.Row([
@@ -71,9 +75,10 @@ layout = dbc.Container(
     ]
 )
 
+
 @callback(
     [
-        Output('output-file-info', 'children'),  # Feedback for file upload
+        Output('output-file-info', 'children'), # Feedback for file upload
         Output('table-container', 'children'),  # Display table with file content
         Output('upload-data', 'disabled'),      # Disable upload after submission
         Output('submit-button', 'disabled'),    # Disable submit button after processing
@@ -92,7 +97,9 @@ layout = dbc.Container(
         State('upload-data', 'filename'),        # Uploaded file name
     ]
 )
-def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted, file_contents=None, filename=None):
+def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted,
+                 file_contents=None, filename=None):
+
     start_outcome = "Please upload an Excel file.", None, False, False, True, True, False
     if file_contents is None:
         return start_outcome
@@ -101,18 +108,22 @@ def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted, f
         return start_outcome
 
     try:
+        # If the submit button has been selected, process the delivered Excel by creating a DataFrame
         content_type, content_string = file_contents.split(',')
         decoded = base64.b64decode(content_string)
         df = pd.read_excel(io.BytesIO(decoded))
 
+        # Shuffle the order of the DataFrame rows if the random study option has been selected
         if study_order == 'random':
             df = df.sample(frac=1).reset_index(drop=True)
 
+        # Preparing an formatted html table with the content of the DataFrame processed in the previous step
         table_header = html.Thead(html.Tr([html.Th(col) for col in df.columns]))
         table_body = html.Tbody([
             html.Tr([html.Td(df.iloc[i, col]) for col in range(len(df.columns))])
             for i in range(len(df))
         ])
+
         table = dbc.Table(
             [table_header, table_body],
             bordered=True,
@@ -132,4 +143,12 @@ def update_table(n_clicks_submit, n_clicks_reset, study_order, form_submitted, f
         )
 
     except Exception as e:
-        return f"Error processing file: {str(e)}", None, False, False, True, True, True
+        return (
+            f"Error processing file: {str(e)}",
+            None,  # No result can be passed
+            False, # Keep enabling upload
+            False, # Keep enabling submitting
+            True,  # Keep enabled reset button
+            True,  # Keep enabled start button
+            True   # Form is submitted
+        )
