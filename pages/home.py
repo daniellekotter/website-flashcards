@@ -11,25 +11,35 @@ dash.register_page(
     order=0
 )
 
+
 layout = dbc.Container(
     children=[
         dbc.Row(
             dbc.Col(
-                [
-                    html.Div([
-                        html.H2("Welcome!", style={"textAlign": "center"}),
-                        html.Img(src="assets/study.png", height="600px"),
-                        dbc.Button(
-                            "Get started!",
-                            id="get-started-button",
-                            color="danger",
-                            href="/upload",
-                            className="d-grid gap-2 col-4 mx-auto"
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Img(
+                                    src="assets/study.png",
+                                    className="overlay-img"
+                                ),
+                                dbc.Button(
+                                    "Get started!",
+                                    id="get-started-button",
+                                    color="danger",
+                                    href="/upload",
+                                    className="overlay-btn col-2"
+                                ),
+                            ],
+                            className="overlay-img-container"
                         ),
-                    ], className="d-grid gap-2 col-6 mx-auto")
-                ],
+                    ]
+                ),
             ),
             justify="center",
         ),
-    ]
+    ],
+    fluid=True,
+    style={"margin": "0px", "padding": "0px"}
 )

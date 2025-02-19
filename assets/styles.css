@@ -38,8 +38,8 @@
 }
 
 .page-content {
-    padding: 10px;
     width: 100%;
+    padding: 10px;
     box-sizing: border-box;
 }
 
@@ -54,6 +54,7 @@
     justify-content: center;
     text-align: center; /* Ensure text is centered */
     height: 100%; /* Adjust based on your layout */
+    min-height: 300px;
 }
 
 .card-title,
@@ -78,6 +79,42 @@
 }
 
 .flash_card .btn-group {
-    display: flex;
+    display: inline-flex;
     justify-content: center; /* Center button group */
+    width: 100%;
 }
+
+.overlay-img-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  }
+  
+  .overlay-img {
+    width: 100%;
+    height: 700px;
+  }
+  
+  .overlay-btn {
+    position: absolute;
+    top: 72%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  @media (max-width: 858px) {
+    .overlay-img {
+      width: 100%;
+      object-fit: cover;
+      height: 610px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .overlay-img {
+      height: 400px;
+      object-fit: cover;
+      width: 100%;
+    }
+  }
+  

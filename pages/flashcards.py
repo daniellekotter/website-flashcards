@@ -14,7 +14,6 @@ dash.register_page(
 )
 
 
-# Flashcard Layout
 flash_card = dbc.Card(
     children=[
         dbc.CardHeader(
@@ -27,39 +26,40 @@ flash_card = dbc.Card(
                     id="answer-div",
                     className="card-text"
                 ),
-                dbc.ButtonGroup(
-                    [
-                        dbc.Button(
-                            "Show Answer",
-                            id="show-answer-btn",
-                            n_clicks=0,
-                            color="secondary",
-                        ),
-                        dbc.Button(
-                            "Correct",
-                            id="correct-question-btn",
-                            n_clicks=0,
-                            color="success",
-                        ),
-                        dbc.Button(
-                            "Incorrect",
-                            id="incorrect-question-btn",
-                            n_clicks=0,
-                            color="danger",
-                        ),
-                    ]
+            ]
+        ),
+        dbc.ButtonGroup(
+            [
+                dbc.Button(
+                    "Show Answer",
+                    id="show-answer-btn",
+                    n_clicks=0,
+                    color="secondary"
+                ),
+                dbc.Button(
+                    "Correct",
+                    id="correct-question-btn",
+                    n_clicks=0,
+                    color="success"
+                ),
+                dbc.Button(
+                    "Incorrect",
+                    id="incorrect-question-btn",
+                    n_clicks=0,
+                    color="danger"
                 ),
             ]
         ),
     ],
-    class_name="flash_card"
+    class_name="flash-card"
 )
 
 
 layout = dbc.Container(children=[
     dbc.Row([
-        html.Br(),
-        dbc.Progress(id="progress-bar", striped=True, animated=True, className="mb-3"),
+        html.Div(
+            dbc.Progress(id="progress-bar", striped=True, animated=True, className="mb-3 mt-1"),
+        ),
         dbc.Col(flash_card, width={"size": 4, "offset": 4}),
     ]),
     dcc.Store(id='uploaded-data', storage_type='session'),
