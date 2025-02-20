@@ -11,6 +11,7 @@
 
 .container {
     max-width: none;
+    padding: 0px;
 }
 
 .table {
@@ -23,6 +24,7 @@
     background-color: var(--primary-color) !important;
     width: 100%;
     color: white;
+    padding: 10px;
 }
 
 .navbar>.container {
@@ -39,7 +41,6 @@
 
 .page-content {
     width: 100%;
-    padding: 10px;
     box-sizing: border-box;
 }
 
@@ -47,14 +48,16 @@
     padding-bottom: 20px !important;
 }
 
-.flash_card {
+.flash-card {
+    min-height: 300px;
+}
+
+.flash-card .card-body {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center; /* Ensure text is centered */
-    height: 100%; /* Adjust based on your layout */
-    min-height: 300px;
+    justify-content: center; /* Centers content vertically */
+    align-items: center; /* Centers content horizontally */
+    text-align: center; /* Ensures text inside is centered */
 }
 
 .card-title,
@@ -75,10 +78,10 @@
 }
 
 .card-text {
-    margin: 30px;
+    margin: 30px !important;
 }
 
-.flash_card .btn-group {
+.flash-card .btn-group {
     display: inline-flex;
     justify-content: center; /* Center button group */
     width: 100%;
@@ -92,7 +95,7 @@
   
   .overlay-img {
     width: 100%;
-    height: 700px;
+    height: 100vh;
   }
   
   .overlay-btn {

@@ -71,9 +71,10 @@ layout = dbc.Container(
     children=[
         dbc.Row([
             dbc.Col(upload_form, width=3),
-            dbc.Col(upload_content, width=8)
+            dbc.Col(upload_content, width=9)
         ])
-    ]
+    ],
+    style={"padding": "10px 20px 10px 20px"}
 )
 
 

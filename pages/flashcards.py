@@ -65,16 +65,19 @@ layout = dbc.Container(children=[
     dcc.Store(id='uploaded-data', storage_type='session'),
     dcc.Store(id='current-questions', storage_type='session'),
     dcc.Store(id='correct-answers', storage_type='session', data=[]),
-])
+    ],
+    style={"padding": "10px 20px 10px 20px"}
+)
 
 
 @callback(
     Output('current-questions', 'data', allow_duplicate=True),
-    Input('url', 'pathname'),  # Triggers when navigating to /study
+    Input('url', 'pathname'),
     State('uploaded-data', 'data'),
     prevent_initial_call='initial_duplicate'
 )
 def initialize_questions(pathname, uploaded_data):
+    # Activating this callback when navigating to this page
     if pathname == '/study' and uploaded_data:
         df = pd.read_json(StringIO(uploaded_data), orient='split')
         questions = df.to_dict('records')
@@ -93,7 +96,7 @@ def initialize_questions(pathname, uploaded_data):
         Output('correct-answers', 'data')
     ],
     [
-        Input('url', 'pathname'),  # Triggers when navigating to /study
+        Input('url', 'pathname'),
         Input("show-answer-btn", "n_clicks"),
         Input("correct-question-btn", "n_clicks"),
         Input("incorrect-question-btn", "n_clicks")

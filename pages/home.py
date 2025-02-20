@@ -34,12 +34,10 @@ layout = dbc.Container(
                             ],
                             className="overlay-img-container"
                         ),
-                    ]
+                    ],
                 ),
             ),
             justify="center",
         ),
     ],
-    fluid=True,
-    style={"margin": "0px", "padding": "0px"}
 )
