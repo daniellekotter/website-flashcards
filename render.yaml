@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: flashcard-learning
+    name: flash-learning
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:server
