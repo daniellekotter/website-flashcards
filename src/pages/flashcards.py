@@ -113,7 +113,7 @@ def update_flashcard(pathname, show_clicks, correct_clicks, incorrect_clicks, qu
     
     ctx = dash.callback_context
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    print("button pressed" + button_id)
+    print("button pressed: " + button_id)
     # Get the first question
     current_question = questions[0]
 

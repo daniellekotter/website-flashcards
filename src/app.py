@@ -11,6 +11,7 @@ app = dash.Dash(
     use_pages=True,
 )
 app.title = "Flashcard Study"
+server = app.server
 
 
 nav_drop = [
@@ -63,4 +64,4 @@ app.layout = html.Div(children=[
 
 # Run the app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run_server(debug=True)
